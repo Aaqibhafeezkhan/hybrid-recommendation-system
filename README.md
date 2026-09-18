@@ -174,6 +174,12 @@ Install the project dependencies:
 python -m pip install -r requirements.txt
 ~~~
 
+Install the project in editable mode so the `src`-layout modules can be imported correctly during development:
+
+~~~bash
+python -m pip install -e .
+~~~
+
 If the raw dataset is not fully available after cloning, make sure Git LFS is installed and pull the tracked data:
 
 ~~~bash
