@@ -4,6 +4,7 @@ from src.config.settings import (
 
 from src.data.loader import DataLoader
 from src.data.preprocessor import DataPreprocessor
+from src.data.movie_resolver import MovieTitleResolver
 
 from src.content_based.feature_engineering import FeatureEngineer
 from src.content_based.recommender import ContentBasedRecommender
@@ -78,25 +79,10 @@ def main():
     # Find Movie
     # -------------------------------
 
-    movie_ids = []
-
-    for movie_title in MOVIE_TITLE:
-
-        selected_movie = genre_matrix[
-            genre_matrix["title"] == movie_title
-        ]
-
-        if selected_movie.empty:
-            raise ValueError(
-                f"Movie not found: {movie_title}"
-            )
-
-        movie_id = (
-            selected_movie["movieId"]
-            .iloc[0]
-        )
-
-        movie_ids.append(movie_id)
+    movie_ids = MovieTitleResolver.resolve_titles(
+        movies=genre_matrix,
+        movie_titles=MOVIE_TITLE,
+    )
 
     print("\nSelected Movies:")
 

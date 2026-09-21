@@ -18,6 +18,7 @@ from src.content_based.recommender import (
 
 from src.data.loader import DataLoader
 from src.data.preprocessor import DataPreprocessor
+from src.data.movie_resolver import MovieTitleResolver
 
 from src.hybrid.recommender import (
     HybridRecommender,
@@ -48,31 +49,10 @@ def get_seed_movie_ids(
     movies: pd.DataFrame,
 ) -> list[int]:
 
-    movie_ids = []
-
-    for movie_title in SEED_MOVIE_TITLES:
-
-        search_title = movie_title.strip().lower()
-
-        selected_movie = movies[
-            movies["title"]
-            .str.lower()
-            .str.startswith(search_title)
-        ]
-
-        if selected_movie.empty:
-            raise ValueError(
-                f"Movie not found: {movie_title}"
-            )
-
-        movie_id = int(
-            selected_movie["movieId"].iloc[0]
-        )
-
-        movie_ids.append(movie_id)
-
-    return movie_ids
-
+    return MovieTitleResolver.resolve_titles(
+        movies=movies,
+        movie_titles=SEED_MOVIE_TITLES,
+    )
 
 # ============================================================
 # Generate Hybrid Recommendations
