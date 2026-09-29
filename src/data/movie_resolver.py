@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 
 
@@ -22,6 +24,14 @@ class MovieTitleResolver:
 
         movie_ids = []
 
+        normalized_movies = (
+            movies["title"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.casefold()
+        )
+
         for movie_title in movie_titles:
             if not isinstance(movie_title, str) or not movie_title.strip():
                 raise ValueError(
@@ -30,14 +40,18 @@ class MovieTitleResolver:
 
             normalized_title = movie_title.strip().casefold()
 
-            matches = movies[
-                movies["title"]
-                .fillna("")
-                .astype(str)
-                .str.strip()
-                .str.casefold()
-                == normalized_title
-            ]
+            matches = movies[normalized_movies == normalized_title]
+
+            if matches.empty:
+                yearless_pattern = (
+                    rf"^{re.escape(normalized_title)} \(\d{{4}}\)$"
+                )
+                matches = movies[
+                    normalized_movies.str.match(
+                        yearless_pattern,
+                        na=False,
+                    )
+                ]
 
             if matches.empty:
                 raise ValueError(f"Movie not found: {movie_title}")
