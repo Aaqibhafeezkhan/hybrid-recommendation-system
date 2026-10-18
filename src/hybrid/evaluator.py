@@ -155,6 +155,35 @@ class HybridEvaluator:
             - HybridEvaluator.REQUIRED_CATEGORIES
         )
 
+        section_category_mismatches = []
+
+        for section in (
+            "special",
+            "content_based",
+            "collaborative",
+        ):
+            section_rows = sections[section]
+            mismatched_rows = section_rows[
+                section_rows["category"].isna()
+                | (section_rows["category"] != section)
+            ]
+
+            for row in mismatched_rows[
+                ["movieId", "category"]
+            ].to_dict("records"):
+                actual_category = row["category"]
+                section_category_mismatches.append(
+                    {
+                        "section": section,
+                        "movieId": row["movieId"],
+                        "category": (
+                            None
+                            if pd.isna(actual_category)
+                            else actual_category
+                        ),
+                    }
+                )
+
         special_ids = set(
             sections["special"]["movieId"]
         )
@@ -180,6 +209,7 @@ class HybridEvaluator:
             and missing_titles == 0
             and missing_genres == 0
             and not invalid_categories
+            and not section_category_mismatches
             and not special_overlap_violation
         )
 
@@ -192,6 +222,8 @@ class HybridEvaluator:
                 missing_genres,
             "invalid_categories":
                 invalid_categories,
+            "section_category_mismatches":
+                section_category_mismatches,
             "special_overlap_violation":
                 special_overlap_violation,
             "passed":

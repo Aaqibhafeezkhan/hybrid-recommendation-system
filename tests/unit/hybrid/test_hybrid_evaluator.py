@@ -46,6 +46,7 @@ def test_evaluator_reports_counts_integrity_diversity_scores_and_overlap(
         "total_unique": 3,
     }
     assert results["integrity"]["passed"] is True
+    assert results["integrity"]["section_category_mismatches"] == []
     assert results["diversity"] == {
         "unique_movies": 3,
         "unique_genres": 2,
@@ -79,6 +80,42 @@ def test_evaluator_flags_duplicate_and_special_overlap_integrity_failures(
     assert integrity["passed"] is False
 
 
+def test_evaluator_flags_recognized_category_in_wrong_section(valid_sections):
+    valid_sections["content_based"] = make_section(
+        [2], ["collaborative"], ["Comedy"]
+    )
+
+    integrity = HybridEvaluator().evaluate(valid_sections)["integrity"]
+
+    assert integrity["section_category_mismatches"] == [
+        {
+            "section": "content_based",
+            "movieId": 2,
+            "category": "collaborative",
+        }
+    ]
+    assert integrity["invalid_categories"] == []
+    assert integrity["passed"] is False
+
+
+def test_evaluator_flags_unknown_category(valid_sections):
+    valid_sections["special"] = make_section(
+        [1], ["unknown"], ["Comedy"]
+    )
+
+    integrity = HybridEvaluator().evaluate(valid_sections)["integrity"]
+
+    assert integrity["invalid_categories"] == ["unknown"]
+    assert integrity["section_category_mismatches"] == [
+        {
+            "section": "special",
+            "movieId": 1,
+            "category": "unknown",
+        }
+    ]
+    assert integrity["passed"] is False
+
+
 def test_evaluator_accepts_empty_sections_and_returns_empty_score_summaries():
     empty = pd.DataFrame(columns=["movieId", "title", "genres", "category"])
     results = HybridEvaluator().evaluate(
@@ -87,6 +124,7 @@ def test_evaluator_accepts_empty_sections_and_returns_empty_score_summaries():
 
     assert results["counts"]["total_rows"] == 0
     assert results["integrity"]["passed"] is True
+    assert results["integrity"]["section_category_mismatches"] == []
     assert results["scores"] == {
         "average_similarity": None,
         "average_estimated_rating": None,
