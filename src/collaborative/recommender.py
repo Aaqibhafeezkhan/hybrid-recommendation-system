@@ -90,12 +90,25 @@ class CollaborativeRecommender:
 
 
 
-        for movie_id in movie_ids:
+        candidate_movie_ids = [
+            movie_id
+            for movie_id in movie_ids
+            if movie_id not in rated_movies
+        ]
+
+        result_columns = [
+            "movieId",
+            "title",
+            "genres",
+            "estimated_rating"
+        ]
+
+        if not candidate_movie_ids:
+            return pd.DataFrame(columns=result_columns)
 
 
-            if movie_id in rated_movies:
-                continue
 
+        for movie_id in candidate_movie_ids:
 
 
             prediction = self.model.predict(
@@ -137,10 +150,5 @@ class CollaborativeRecommender:
 
 
         return recommendations[
-            [
-                "movieId",
-                "title",
-                "genres",
-                "estimated_rating"
-            ]
+            result_columns
         ]
