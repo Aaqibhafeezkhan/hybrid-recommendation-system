@@ -150,14 +150,18 @@ def test_hybrid_rejects_non_positive_limits(
         recommender.recommend(**kwargs)
 
 
-def test_hybrid_requires_known_user_and_seed_movies(
+def test_hybrid_allows_unknown_user_with_seed_but_rejects_unknown_seed_movie(
     hybrid_recommender,
     genre_matrix,
 ):
-    recommender, _, _ = hybrid_recommender
+    recommender, content, collaborative = hybrid_recommender
 
-    with pytest.raises(ValueError, match="User ID 99"):
-        recommender.recommend(99, 1, genre_matrix)
+    sections = recommender.recommend(99, 1, genre_matrix)
+
+    assert sections["content_based"]["movieId"].tolist() == [3, 4, 5, 6, 7]
+    assert sections["collaborative"].empty
+    assert collaborative.calls == []
+    assert len(content.calls) == 1
 
     with pytest.raises(ValueError, match="not found in movies"):
         recommender.recommend(1, 999, genre_matrix)
